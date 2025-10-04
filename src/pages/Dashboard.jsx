@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button"
 import Header from "@/components/Header"
 import { Link } from "react-router-dom"
-import { auth } from "@/services/firebaseConfig"
+import { auth } from "@/services/firebaseConfig"  
 
 function Dashboard() {
   const user = auth.currentUser

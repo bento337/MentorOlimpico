@@ -1,11 +1,8 @@
-// src/firebaseConfig.js
-import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { initializeApp } from "firebase/app"
+import { getAuth } from "firebase/auth"
+import { getFirestore } from "firebase/firestore"
+import { getStorage } from "firebase/storage"
 
-import { getAnalytics } from "firebase/analytics";
-
-// 🔥 pegue esses dados no Firebase Console (Configurações do app -> SDK setup)
 const firebaseConfig = {
   apiKey: "AIzaSyBB_L_ausJfBa4DNJ-7hwoHVQI1b4gilCg",
   authDomain: "mentorolimpico-7a077.firebaseapp.com",
@@ -16,9 +13,8 @@ const firebaseConfig = {
   measurementId: "G-9T0K71D99F"
 };
 
-// Inicializa Firebase
-const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-export const db = getFirestore(app);
 
-const analytics = getAnalytics(app);
+const app = initializeApp(firebaseConfig)
+export const auth = getAuth(app)
+export const db = getFirestore(app)
+export const storage = getStorage(app)

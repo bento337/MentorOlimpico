@@ -33,17 +33,20 @@ function Header() {
   useEffect(() => {
     const loadUserData = async () => {
       if (user) {
-        try {
-          const userDoc = await getDoc(doc(db, "usuarios", user.uid))
-          if (userDoc.exists()) {
-            setUserData(userDoc.data())
-          }
-        } catch (error) {
-          console.error("Erro ao carregar dados do usuário:", error)
+        const userDoc = await getDoc(doc(db, "usuarios", user.uid))
+        if (userDoc.exists()) {
+          setUserData(userDoc.data())
+        } else {
+          // cria automaticamente se não existir
+          await setDoc(doc(db, "usuarios", user.uid), {
+            nome: user.email.split('@')[0],
+            email: user.email,
+            preferencia: "OBMEP",
+            dataCriacao: new Date()
+          })
         }
       }
     }
-
     loadUserData()
   }, [user])
 
