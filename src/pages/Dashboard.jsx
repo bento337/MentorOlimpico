@@ -3,7 +3,7 @@ import Header from "@/components/Header"
 import { Link } from "react-router-dom"
 import { auth } from "@/services/firebaseConfig"
 
-function Inicio() {
+function Dashboard() {
   const user = auth.currentUser
 
   return (
@@ -67,6 +67,6 @@ function Inicio() {
   )
 }
 
-export default Inicio
+export default Dashboard
 
 

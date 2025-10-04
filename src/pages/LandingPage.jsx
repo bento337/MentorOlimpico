@@ -14,7 +14,7 @@ import { Link } from "react-router-dom"
 import { ThemeToggle } from "@/components/ThemeToggle"
 import { loginUser } from "../services/authService"
 
-function Home() {
+function LandingPage() {
   return (
     <>
       <title>Mentor Olímpico</title>
@@ -117,4 +117,4 @@ function Home() {
   )
 }
 
-export default Home
+export default LandingPage
