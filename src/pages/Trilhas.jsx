@@ -27,7 +27,6 @@ function Trilhas() {
   return (
     <>
       <Header />
-      
 
       <main className="p-6 max-w-5xl mx-auto">
         <h1 className="text-3xl font-bold text-center mb-10">Escolha sua Olimpíada</h1>

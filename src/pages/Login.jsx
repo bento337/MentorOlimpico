@@ -20,7 +20,7 @@ function Login() {
 
     try {
       await loginUser(email, senha)
-      navigate("/inicio") // redireciona para trilhas
+      navigate("/") // ⭐ MUDANÇA AQUI: redireciona para a Home inteligente
     } catch (error) {
       console.error(error.code)
       if (error.code === "auth/user-not-found") {
