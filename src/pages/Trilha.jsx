@@ -157,9 +157,6 @@ function Trilha() {
                 rel="noopener noreferrer"
                 className="text-blue-600 hover:underline text-sm flex items-center gap-2"
               >
-                <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
-                  {index + 1}
-                </span>
                 {tipo === 'site' && `Site teórico ${index + 1}`}
                 {tipo === 'video' && `Videoaula ${index + 1}`}
                 {tipo === 'exercicio' && `Lista de exercícios ${index + 1}`}
