@@ -1,5 +1,4 @@
-// src/pages/Configuracoes.jsx
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -8,14 +7,16 @@ import { Switch } from "@/components/ui/switch"
 import Header from "@/components/Header"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { auth, db, storage } from "@/services/firebaseConfig" 
-import { doc, setDoc, getDoc, updateDoc } from "firebase/firestore"
+import { doc, setDoc, getDoc } from "firebase/firestore"
 import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage"
 import { updatePassword, updateProfile, reauthenticateWithCredential, EmailAuthProvider } from "firebase/auth"
 import { Camera, Save, Shield, Bell, User, BookOpen, Trash2 } from "lucide-react"
 
 function Configuracoes() {
   const user = auth.currentUser
+  const fileInputRef = useRef(null)
   const [loading, setLoading] = useState(false)
+  const [fotoLoading, setFotoLoading] = useState(false)
   const [mensagem, setMensagem] = useState("")
   const [erro, setErro] = useState("")
   
@@ -67,100 +68,115 @@ function Configuracoes() {
     carregarDados()
   }, [user])
 
-// Função de upload com debug completo
-const handleFotoUpload = async (event) => {
-  const file = event.target.files[0]
-  console.log("📁 Arquivo selecionado:", file)
-  
-  if (!file || !user) {
-    console.log("❌ Arquivo ou usuário não encontrado")
-    return
+  // 🌟 FUNÇÃO PARA ABRIR O SELETOR DE ARQUIVOS
+  const abrirSeletorArquivos = () => {
+    fileInputRef.current?.click()
   }
 
-  // Verifica se é imagem
-  if (!file.type.startsWith('image/')) {
-    setErro("Por favor, selecione uma imagem válida (PNG, JPG, JPEG).")
-    return
-  }
-
-  console.log("✅ Arquivo é uma imagem:", file.type)
-
-  // Verifica tamanho (máx 5MB)
-  if (file.size > 5 * 1024 * 1024) {
-    setErro("A imagem deve ter menos de 5MB.")
-    return
-  }
-
-  console.log("✅ Tamanho do arquivo OK:", file.size)
-
-  setLoading(true)
-  try {
-    console.log("🟡 Iniciando upload...")
+  // 🌟 FUNÇÃO PARA UPLOAD DE FOTO
+  const handleFotoUpload = async (event) => {
+    const file = event.target.files[0]
+    console.log("📁 Arquivo selecionado:", file)
     
-    // Cria referência no Storage
-    const fotoRef = ref(storage, `profile-pictures/${user.uid}/${Date.now()}-${file.name}`)
-    console.log("📤 Referência criada:", fotoRef.fullPath)
-
-    // Faz upload
-    console.log("🟡 Fazendo upload...")
-    const snapshot = await uploadBytes(fotoRef, file)
-    console.log("✅ Upload completo:", snapshot)
-
-    // Pega URL de download
-    console.log("🟡 Obtendo URL...")
-    const downloadURL = await getDownloadURL(snapshot.ref)
-    console.log("✅ URL obtida:", downloadURL)
-
-    // Atualiza estado
-    const novosDados = {
-      ...dadosUsuario,
-      foto: downloadURL
+    if (!file || !user) {
+      console.log("❌ Arquivo ou usuário não encontrado")
+      return
     }
-    
-    console.log("🟡 Salvando no Firestore...")
-    await setDoc(doc(db, "usuarios", user.uid), novosDados, { merge: true })
-    console.log("✅ Firestore atualizado")
-    
-    setDadosUsuario(novosDados)
-    
-    // Atualiza também no auth profile
-    console.log("🟡 Atualizando perfil do auth...")
-    await updateProfile(user, {
-      photoURL: downloadURL
-    })
-    console.log("✅ Perfil do auth atualizado")
 
-    setMensagem("✅ Foto de perfil atualizada com sucesso!")
-    setErro("")
-    
-  } catch (err) {
-    console.error("🔴 ERRO DETALHADO:", err)
-    console.error("🔴 Código do erro:", err.code)
-    console.error("🔴 Mensagem:", err.message)
-    setErro(`❌ Erro ao fazer upload: ${err.message}`)
-  } finally {
-    setLoading(false)
+    // Verifica se é imagem
+    if (!file.type.startsWith('image/')) {
+      setErro("Por favor, selecione uma imagem válida (PNG, JPG, JPEG).")
+      return
+    }
+
+    console.log("✅ Arquivo é uma imagem:", file.type)
+
+    // Verifica tamanho (máx 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setErro("A imagem deve ter menos de 5MB.")
+      return
+    }
+
+    console.log("✅ Tamanho do arquivo OK:", file.size)
+
+    setFotoLoading(true)
+    try {
+      console.log("🟡 Iniciando upload...")
+      
+      // Cria referência no Storage
+      const fotoRef = ref(storage, `profile-pictures/${user.uid}/${Date.now()}-${file.name}`)
+      console.log("📤 Referência criada:", fotoRef.fullPath)
+
+      // Faz upload
+      console.log("🟡 Fazendo upload...")
+      const snapshot = await uploadBytes(fotoRef, file)
+      console.log("✅ Upload completo:", snapshot)
+
+      // Pega URL de download
+      console.log("🟡 Obtendo URL...")
+      const downloadURL = await getDownloadURL(snapshot.ref)
+      console.log("✅ URL obtida:", downloadURL)
+
+      // Atualiza estado LOCALMENTE primeiro (para mostrar a foto imediatamente)
+      setDadosUsuario(prev => ({
+        ...prev,
+        foto: downloadURL
+      }))
+
+      // Salva no Firestore
+      console.log("🟡 Salvando no Firestore...")
+      await setDoc(doc(db, "usuarios", user.uid), {
+        ...dadosUsuario,
+        foto: downloadURL
+      }, { merge: true })
+      console.log("✅ Firestore atualizado")
+      
+      // Atualiza também no auth profile
+      console.log("🟡 Atualizando perfil do auth...")
+      await updateProfile(user, {
+        photoURL: downloadURL
+      })
+      console.log("✅ Perfil do auth atualizado")
+
+      setMensagem("✅ Foto de perfil atualizada com sucesso!")
+      setErro("")
+      
+      // Limpa o input para permitir selecionar o mesmo arquivo novamente
+      event.target.value = ""
+      
+    } catch (err) {
+      console.error("🔴 ERRO DETALHADO:", err)
+      console.error("🔴 Código do erro:", err.code)
+      console.error("🔴 Mensagem:", err.message)
+      setErro(`❌ Erro ao fazer upload: ${err.message}`)
+    } finally {
+      setFotoLoading(false)
+    }
   }
-}
 
   // 🌟 FUNÇÃO PARA REMOVER FOTO
   const removerFoto = async () => {
     if (!user || !dadosUsuario.foto) return
 
-    setLoading(true)
+    setFotoLoading(true)
     try {
-      // Deleta do Storage
-      const fotoRef = ref(storage, dadosUsuario.foto)
-      await deleteObject(fotoRef)
+      // Tenta deletar do Storage (se a URL for do Storage)
+      if (dadosUsuario.foto.includes('firebasestorage.googleapis.com')) {
+        const fotoRef = ref(storage, dadosUsuario.foto)
+        await deleteObject(fotoRef)
+      }
 
-      // Atualiza estado e Firestore
-      const novosDados = {
+      // Atualiza estado LOCALMENTE primeiro
+      setDadosUsuario(prev => ({
+        ...prev,
+        foto: ""
+      }))
+
+      // Atualiza Firestore
+      await setDoc(doc(db, "usuarios", user.uid), {
         ...dadosUsuario,
         foto: ""
-      }
-      
-      await setDoc(doc(db, "usuarios", user.uid), novosDados, { merge: true })
-      setDadosUsuario(novosDados)
+      }, { merge: true })
 
       // Remove do auth profile
       await updateProfile(user, {
@@ -168,11 +184,17 @@ const handleFotoUpload = async (event) => {
       })
 
       setMensagem("✅ Foto removida com sucesso!")
+      setErro("")
     } catch (err) {
       console.error("Erro ao remover foto:", err)
-      setErro("❌ Erro ao remover foto.")
+      // Mesmo se der erro no Storage, remove do estado local
+      setDadosUsuario(prev => ({
+        ...prev,
+        foto: ""
+      }))
+      setErro("❌ Erro ao remover foto, mas foi removida localmente.")
     } finally {
-      setLoading(false)
+      setFotoLoading(false)
     }
   }
 
@@ -305,58 +327,56 @@ const handleFotoUpload = async (event) => {
           </div>
           
           <div className="flex flex-col md:flex-row gap-8">
-            
-{/* Foto de Perfil */}
-<div className="flex-shrink-0">
-  <div className="flex flex-col items-center gap-4">
-    <Avatar className="h-24 w-24 border-2">
-      <AvatarImage src={dadosUsuario.foto} />
-      <AvatarFallback className="text-xl bg-primary text-primary-foreground">
-        {dadosUsuario.nome ? dadosUsuario.nome.charAt(0).toUpperCase() : "U"}
-      </AvatarFallback>
-    </Avatar>
-    
-    <div className="flex flex-col gap-2">
-      {/* ⭐ CORREÇÃO AQUI - Remova o Label e use onClick diretamente */}
-      <input
-        id="foto-upload"
-        type="file"
-        accept="image/*"
-        onChange={handleFotoUpload}
-        className="hidden"
-      />
-      <Button 
-        type="button" 
-        variant="outline" 
-        size="sm" 
-        disabled={loading} 
-        className="gap-2"
-        onClick={() => document.getElementById('foto-upload').click()}
-      >
-        <Camera className="h-4 w-4" />
-        {loading ? "Carregando..." : "Alterar Foto"}
-      </Button>
-      
-      {dadosUsuario.foto && (
-        <Button 
-          type="button" 
-          variant="outline" 
-          size="sm" 
-          onClick={removerFoto}
-          disabled={loading}
-          className="gap-2 text-red-600 hover:text-red-700"
-        >
-          <Trash2 className="h-4 w-4" />
-          Remover
-        </Button>
-      )}
-    </div>
-    
-    <p className="text-xs text-muted-foreground text-center">
-      PNG, JPG até 5MB
-    </p>
-  </div>
-</div>
+            {/* Foto de Perfil */}
+            <div className="flex-shrink-0">
+              <div className="flex flex-col items-center gap-4">
+                <Avatar className="h-24 w-24 border-2">
+                  <AvatarImage src={dadosUsuario.foto} />
+                  <AvatarFallback className="text-xl bg-primary text-primary-foreground">
+                    {dadosUsuario.nome ? dadosUsuario.nome.charAt(0).toUpperCase() : "U"}
+                  </AvatarFallback>
+                </Avatar>
+                
+                <div className="flex flex-col gap-2">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFotoUpload}
+                    className="hidden"
+                  />
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    size="sm" 
+                    disabled={fotoLoading} 
+                    className="gap-2"
+                    onClick={abrirSeletorArquivos}
+                  >
+                    <Camera className="h-4 w-4" />
+                    {fotoLoading ? "Carregando..." : "Alterar Foto"}
+                  </Button>
+                  
+                  {dadosUsuario.foto && (
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={removerFoto}
+                      disabled={fotoLoading}
+                      className="gap-2 text-red-600 hover:text-red-700"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Remover
+                    </Button>
+                  )}
+                </div>
+                
+                <p className="text-xs text-muted-foreground text-center">
+                  PNG, JPG até 5MB
+                </p>
+              </div>
+            </div>
 
             {/* Formulário de Dados */}
             <div className="flex-1 grid md:grid-cols-2 gap-4">
@@ -444,7 +464,7 @@ const handleFotoUpload = async (event) => {
                   min="1"
                   max="40"
                   value={dadosUsuario.metas.horasEstudo}
-                  onChange={(e) => atualizarMeta('horasEstudo', parseInt(e.target.value))}
+                  onChange={(e) => atualizarMeta('horasEstudo', parseInt(e.target.value) || 1)}
                 />
                 <span className="text-sm text-muted-foreground">horas</span>
               </div>
