@@ -96,7 +96,7 @@ function Trilha() {
     buscarMaterias()
   }, [id, configOlimpiada])
 
-  // 🌟 FUNÇÃO PARA FORMATAR TEMPO EM HORAS
+  // FUNÇÃO PARA FORMATAR TEMPO EM HORAS
   const formatarTempo = (tempo) => {
     if (!tempo) return "⏳ A definir"
     
@@ -122,13 +122,13 @@ function Trilha() {
     return tempo
   }
 
-  // Dados do gráfico - baseado na IMPORTÂNCIA
+  // Dados do gráfico - baseado na importância 
   const pieData = materias.map((materia) => ({
     name: materia.nome,
     value: materia.importancia || 1,
   }))
 
-  // 🌟 CALCULA TEMPO TOTAL DE ESTUDO
+  //  CALCULA TEMPO TOTAL DE ESTUDO
   const tempoTotal = materias.reduce((total, materia) => {
     if (materia.tempo && typeof materia.tempo === 'number') {
       return total + materia.tempo
@@ -136,7 +136,7 @@ function Trilha() {
     return total
   }, 0)
 
-  // 🌟 FUNÇÃO PARA RENDERIZAR LINKS
+  //  FUNÇÃO PARA RENDERIZAR LINKS
   const renderizarLinks = (titulo, emoji, links, tipo) => {
     if (!links || links.length === 0) return null
 

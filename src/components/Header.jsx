@@ -124,7 +124,7 @@ function Header() {
             </NavigationMenuItem>
 
             <NavigationMenuItem>
-              <Link to="#cronogramas" className="hover:text-primary font-bold transition-colors">Cronogramas</Link>
+              <Link to="/Cronogramas" className="hover:text-primary font-bold transition-colors">Cronogramas</Link>
             </NavigationMenuItem>
 
             <NavigationMenuItem>

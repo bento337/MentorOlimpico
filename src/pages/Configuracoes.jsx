@@ -68,12 +68,12 @@ function Configuracoes() {
     carregarDados()
   }, [user])
 
-  // 🌟 FUNÇÃO PARA ABRIR O SELETOR DE ARQUIVOS
+  //   FUNÇÃO PARA ABRIR O SELETOR DE ARQUIVOS
   const abrirSeletorArquivos = () => {
     fileInputRef.current?.click()
   }
 
-  // 🌟 FUNÇÃO PARA UPLOAD DE FOTO
+  //   FUNÇÃO PARA UPLOAD DE FOTO
   const handleFotoUpload = async (event) => {
     const file = event.target.files[0]
     console.log("📁 Arquivo selecionado:", file)
@@ -154,7 +154,7 @@ function Configuracoes() {
     }
   }
 
-  // 🌟 FUNÇÃO PARA REMOVER FOTO
+  //   FUNÇÃO PARA REMOVER FOTO
   const removerFoto = async () => {
     if (!user || !dadosUsuario.foto) return
 
@@ -198,7 +198,7 @@ function Configuracoes() {
     }
   }
 
-  // 🌟 FUNÇÃO PARA SALVAR DADOS GERAIS
+  //   FUNÇÃO PARA SALVAR DADOS GERAIS
   const salvarDadosGerais = async (e) => {
     e.preventDefault()
     if (!user) {
@@ -219,7 +219,7 @@ function Configuracoes() {
     }
   }
 
-  // 🌟 FUNÇÃO PARA ALTERAR SENHA
+  //   FUNÇÃO PARA ALTERAR SENHA
   const alterarSenha = async (e) => {
     e.preventDefault()
     if (!user) {
@@ -270,7 +270,7 @@ function Configuracoes() {
     }
   }
 
-  // 🌟 ATUALIZAÇÃO DE CAMPOS INDIVIDUAIS
+  //   ATUALIZAÇÃO DE CAMPOS INDIVIDUAIS
   const atualizarCampo = (campo, valor) => {
     setDadosUsuario(prev => ({
       ...prev,
