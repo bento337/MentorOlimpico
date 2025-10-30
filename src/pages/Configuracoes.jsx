@@ -7,7 +7,7 @@ import { Switch } from "@/components/ui/switch"
 import Header from "@/components/Header"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { auth, db, storage } from "@/services/firebaseConfig" 
-import { doc, setDoc, getDoc } from "firebase/firestore"
+import { doc, setDoc, getDoc, updateDoc } from "firebase/firestore"
 import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage"
 import { updatePassword, updateProfile, reauthenticateWithCredential, EmailAuthProvider } from "firebase/auth"
 import { Camera, Save, Shield, Bell, User, BookOpen, Trash2 } from "lucide-react"
@@ -20,9 +20,10 @@ function Configuracoes() {
   const [mensagem, setMensagem] = useState("")
   const [erro, setErro] = useState("")
   
-  // Estados dos dados do usuário
+  // Estados dos dados do usuário com estrutura completa
   const [dadosUsuario, setDadosUsuario] = useState({
     nome: "",
+    email: "",
     bio: "",
     escola: "",
     serie: "",
@@ -49,18 +50,71 @@ function Configuracoes() {
     const carregarDados = async () => {
       if (user) {
         try {
+          console.log("🟡 Carregando dados do usuário:", user.uid)
+          
+          // Primeiro, define os dados básicos do auth
+          setDadosUsuario(prev => ({
+            ...prev,
+            nome: user.displayName || "",
+            email: user.email || "",
+            foto: user.photoURL || ""
+          }))
+
+          // Tenta carregar dados adicionais do Firestore
           const userDoc = await getDoc(doc(db, "usuarios", user.uid))
+          
           if (userDoc.exists()) {
             const dados = userDoc.data()
+            console.log("✅ Dados encontrados no Firestore:", dados)
+            
             setDadosUsuario(prev => ({
               ...prev,
-              ...dados,
-              preferencias: { ...prev.preferencias, ...dados.preferencias },
-              metas: { ...prev.metas, ...dados.metas }
+              nome: dados.nome || user.displayName || "",
+              email: user.email || "",
+              bio: dados.bio || "",
+              escola: dados.escola || "",
+              serie: dados.serie || "",
+              foto: dados.foto || user.photoURL || "",
+              preferencias: {
+                olimpiadaFavorita: dados.preferencias?.olimpiadaFavorita || "OBMEP",
+                nivel: dados.preferencias?.nivel || "iniciante",
+                notificacoes: dados.preferencias?.notificacoes !== undefined ? dados.preferencias.notificacoes : true,
+                emailMarketing: dados.preferencias?.emailMarketing !== undefined ? dados.preferencias.emailMarketing : false
+              },
+              metas: {
+                horasEstudo: dados.metas?.horasEstudo || 10,
+                olimpiadaAlvo: dados.metas?.olimpiadaAlvo || "OBMEP"
+              }
             }))
+          } else {
+            console.log("ℹ️ Nenhum dado encontrado no Firestore, usando dados padrão")
+            // Se não existir documento, cria um com dados iniciais
+            const dadosIniciais = {
+              nome: user.displayName || "",
+              email: user.email || "",
+              bio: "",
+              escola: "",
+              serie: "",
+              foto: user.photoURL || "",
+              preferencias: {
+                olimpiadaFavorita: "OBMEP",
+                nivel: "iniciante",
+                notificacoes: true,
+                emailMarketing: false
+              },
+              metas: {
+                horasEstudo: 10,
+                olimpiadaAlvo: "OBMEP"
+              },
+              dataCriacao: new Date()
+            }
+            
+            await setDoc(doc(db, "usuarios", user.uid), dadosIniciais)
+            setDadosUsuario(dadosIniciais)
+            console.log("✅ Documento criado com dados iniciais")
           }
         } catch (err) {
-          console.error("Erro ao carregar dados:", err)
+          console.error("❌ Erro ao carregar dados:", err)
           setErro("Erro ao carregar dados do usuário.")
         }
       }
@@ -68,12 +122,12 @@ function Configuracoes() {
     carregarDados()
   }, [user])
 
-  //   FUNÇÃO PARA ABRIR O SELETOR DE ARQUIVOS
+  // FUNÇÃO PARA ABRIR O SELETOR DE ARQUIVOS
   const abrirSeletorArquivos = () => {
     fileInputRef.current?.click()
   }
 
-  //   FUNÇÃO PARA UPLOAD DE FOTO
+  // FUNÇÃO PARA UPLOAD DE FOTO
   const handleFotoUpload = async (event) => {
     const file = event.target.files[0]
     console.log("📁 Arquivo selecionado:", file)
@@ -103,13 +157,25 @@ function Configuracoes() {
     try {
       console.log("🟡 Iniciando upload...")
       
-      // Cria referência no Storage
-      const fotoRef = ref(storage, `profile-pictures/${user.uid}/${Date.now()}-${file.name}`)
+      // Cria referência no Storage com nome mais simples
+      const extensao = file.name.split('.').pop()
+      const nomeArquivo = `profile-${Date.now()}.${extensao}`
+      const fotoRef = ref(storage, `profile-pictures/${user.uid}/${nomeArquivo}`)
+      
       console.log("📤 Referência criada:", fotoRef.fullPath)
+
+      // Configura metadata para a imagem
+      const metadata = {
+        contentType: file.type,
+        customMetadata: {
+          'uploadedBy': user.uid,
+          'uploadedAt': new Date().toISOString()
+        }
+      }
 
       // Faz upload
       console.log("🟡 Fazendo upload...")
-      const snapshot = await uploadBytes(fotoRef, file)
+      const snapshot = await uploadBytes(fotoRef, file, metadata)
       console.log("✅ Upload completo:", snapshot)
 
       // Pega URL de download
@@ -126,7 +192,6 @@ function Configuracoes() {
       // Salva no Firestore
       console.log("🟡 Salvando no Firestore...")
       await setDoc(doc(db, "usuarios", user.uid), {
-        ...dadosUsuario,
         foto: downloadURL
       }, { merge: true })
       console.log("✅ Firestore atualizado")
@@ -148,13 +213,22 @@ function Configuracoes() {
       console.error("🔴 ERRO DETALHADO:", err)
       console.error("🔴 Código do erro:", err.code)
       console.error("🔴 Mensagem:", err.message)
-      setErro(`❌ Erro ao fazer upload: ${err.message}`)
+      
+      if (err.code === 'storage/unauthorized') {
+        setErro("❌ Erro de autorização. Verifique as regras do Storage.")
+      } else if (err.code === 'storage/canceled') {
+        setErro("❌ Upload cancelado.")
+      } else if (err.code === 'storage/unknown') {
+        setErro("❌ Erro desconhecido. Verifique sua conexão.")
+      } else {
+        setErro(`❌ Erro ao fazer upload: ${err.message}`)
+      }
     } finally {
       setFotoLoading(false)
     }
   }
 
-  //   FUNÇÃO PARA REMOVER FOTO
+  // FUNÇÃO PARA REMOVER FOTO
   const removerFoto = async () => {
     if (!user || !dadosUsuario.foto) return
 
@@ -174,7 +248,6 @@ function Configuracoes() {
 
       // Atualiza Firestore
       await setDoc(doc(db, "usuarios", user.uid), {
-        ...dadosUsuario,
         foto: ""
       }, { merge: true })
 
@@ -198,7 +271,7 @@ function Configuracoes() {
     }
   }
 
-  //   FUNÇÃO PARA SALVAR DADOS GERAIS
+  // FUNÇÃO PARA SALVAR DADOS GERAIS
   const salvarDadosGerais = async (e) => {
     e.preventDefault()
     if (!user) {
@@ -208,18 +281,49 @@ function Configuracoes() {
 
     setLoading(true)
     try {
-      await setDoc(doc(db, "usuarios", user.uid), dadosUsuario, { merge: true })
+      // Prepara os dados para salvar
+      const dadosParaSalvar = {
+        nome: dadosUsuario.nome,
+        bio: dadosUsuario.bio,
+        escola: dadosUsuario.escola,
+        serie: dadosUsuario.serie,
+        preferencias: dadosUsuario.preferencias,
+        metas: dadosUsuario.metas,
+        dataAtualizacao: new Date()
+      }
+
+      console.log("🟡 Salvando dados:", dadosParaSalvar)
+      
+      // Tenta salvar no Firestore
+      await setDoc(doc(db, "usuarios", user.uid), dadosParaSalvar, { merge: true })
+      
+      // Atualiza também o displayName no auth se o nome foi alterado
+      if (dadosUsuario.nome && dadosUsuario.nome !== user.displayName) {
+        await updateProfile(user, {
+          displayName: dadosUsuario.nome
+        })
+        console.log("✅ DisplayName atualizado no Auth")
+      }
+      
       setMensagem("✅ Dados salvos com sucesso!")
       setErro("")
     } catch (err) {
-      console.error("Erro ao salvar:", err)
-      setErro("❌ Erro ao salvar dados.")
+      console.error("❌ Erro ao salvar:", err)
+      console.error("❌ Código do erro:", err.code)
+      
+      if (err.code === 'permission-denied') {
+        setErro("❌ Permissão negada. Verifique as regras de segurança do Firestore.")
+      } else if (err.code === 'unauthenticated') {
+        setErro("❌ Usuário não autenticado. Faça login novamente.")
+      } else {
+        setErro("❌ Erro ao salvar dados: " + err.message)
+      }
     } finally {
       setLoading(false)
     }
   }
 
-  //   FUNÇÃO PARA ALTERAR SENHA
+  // FUNÇÃO PARA ALTERAR SENHA
   const alterarSenha = async (e) => {
     e.preventDefault()
     if (!user) {
@@ -257,7 +361,7 @@ function Configuracoes() {
       setConfirmarSenha("")
       setErro("")
     } catch (err) {
-      console.error("Erro ao alterar senha:", err)
+      console.error("❌ Erro ao alterar senha:", err)
       if (err.code === 'auth/wrong-password') {
         setErro("❌ Senha atual incorreta.")
       } else if (err.code === 'auth/weak-password') {
@@ -270,7 +374,7 @@ function Configuracoes() {
     }
   }
 
-  //   ATUALIZAÇÃO DE CAMPOS INDIVIDUAIS
+  // ATUALIZAÇÃO DE CAMPOS INDIVIDUAIS
   const atualizarCampo = (campo, valor) => {
     setDadosUsuario(prev => ({
       ...prev,
@@ -333,7 +437,7 @@ function Configuracoes() {
                 <Avatar className="h-24 w-24 border-2">
                   <AvatarImage src={dadosUsuario.foto} />
                   <AvatarFallback className="text-xl bg-primary text-primary-foreground">
-                    {dadosUsuario.nome ? dadosUsuario.nome.charAt(0).toUpperCase() : "U"}
+                    {dadosUsuario.nome ? dadosUsuario.nome.charAt(0).toUpperCase() : user.email?.charAt(0).toUpperCase() || "U"}
                   </AvatarFallback>
                 </Avatar>
                 
@@ -388,6 +492,18 @@ function Configuracoes() {
                   onChange={(e) => atualizarCampo('nome', e.target.value)}
                   placeholder="Seu nome completo"
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  value={dadosUsuario.email || user.email}
+                  disabled
+                  className="bg-muted"
+                  placeholder="Seu email"
+                />
+                <p className="text-xs text-muted-foreground">Email não pode ser alterado</p>
               </div>
 
               <div className="space-y-2">
