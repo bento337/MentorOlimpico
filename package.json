@@ -28,6 +28,7 @@
     "date-fns": "^4.1.0",
     "firebase": "^12.3.0",
     "jspdf": "^3.0.3",
+    "jspdf-autotable": "^5.0.2",
     "lucide-react": "^0.525.0",
     "react": "^19.1.0",
     "react-day-picker": "^9.11.1",

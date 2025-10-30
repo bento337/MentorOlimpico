@@ -11,6 +11,8 @@ import Trilha from "./pages/Trilha"
 import QuemSomos from "@/pages/QuemSomos"
 import Configuracoes from "./pages/Configuracoes"
 import Cronogramas from "./pages/Cronogramas"
+import Cronograma from "./pages/Cronograma"
+import Dashboard from "./pages/Dashboard"
 import PrivateRoute from "./components/PrivateRoute"
 
 ReactDOM.createRoot(document.getElementById("root")).render(
@@ -26,10 +28,12 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <Route path="/quemsomos" element={<QuemSomos />} />
         
         {/* Rotas Protegidas */}
+        <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
         <Route path="/trilhas" element={<PrivateRoute><Trilhas /></PrivateRoute>} />
         <Route path="/trilhas/:id" element={<PrivateRoute><Trilha /></PrivateRoute>} />
         <Route path="/configuracoes" element={<PrivateRoute><Configuracoes /></PrivateRoute>} />
         <Route path="/cronogramas" element={<PrivateRoute><Cronogramas /></PrivateRoute>} />
+        <Route path="/cronograma" element={<PrivateRoute><Cronograma /></PrivateRoute>} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>
