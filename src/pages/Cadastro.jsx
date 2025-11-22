@@ -22,7 +22,7 @@ function Cadastro() {
 
     try {
       await registerUser(email, senha)
-      navigate("/inicio") // redireciona para a página inicial pós-login
+      navigate("/dashboard") // redireciona para a página inicial pós-login
     } catch (error) {
       console.error(error.code)
       if (error.code === "auth/email-already-in-use") {
