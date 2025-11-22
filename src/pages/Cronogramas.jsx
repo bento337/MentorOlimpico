@@ -1,4 +1,3 @@
-// src/pages/Cronogramas.jsx
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -725,7 +724,7 @@ function Cronogramas() {
               </div>
             )}
 
-            {/* Informações Calculadas - ATUALIZADO */}
+            {/* Informações Calculadas */}
             {dataInicio && dataProva && (
               <div className="mt-6 p-4 bg-muted rounded-lg">
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
