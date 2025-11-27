@@ -72,7 +72,7 @@ function Trilhas() {
             </CardDescription>
             <div className="mt-auto">
               <Button className="w-full" asChild>
-                <Link to="/trilhas/obmep">Ver Trilha →</Link>
+                <Link to="/trilhas/oimsf">Ver Trilha →</Link>
               </Button>
             </div>
           </Card>
@@ -94,7 +94,7 @@ function Trilhas() {
             </CardDescription>
             <div className="mt-auto">
               <Button className="w-full" asChild>
-                <Link to="/trilhas/obmep">Ver Trilha →</Link>
+                <Link to="/trilhas/omif">Ver Trilha →</Link>
               </Button>
             </div>
           </Card>

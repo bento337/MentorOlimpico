@@ -77,9 +77,11 @@ function Trilha() {
         )
 
         // Ordena por importância (DECRESCENTE - maior importância primeiro)
-        const materiasOrdenadas = materiasFiltradas.sort((a, b) => 
-          (b.importancia || 0) - (a.importancia || 0)
-        )
+        const materiasOrdenadas = materiasFiltradas.sort((a, b) => {
+          const relA = a.relevanciaEspecifica?.[id.toUpperCase()] || a.importancia || 5
+          const relB = b.relevanciaEspecifica?.[id.toUpperCase()] || b.importancia || 5
+          return relB - relA
+        })
 
         console.log(`🎯 Matérias filtradas para ${id}:`, materiasOrdenadas)
         setMaterias(materiasOrdenadas)
@@ -125,7 +127,7 @@ function Trilha() {
   // Dados do gráfico - baseado na importância 
   const pieData = materias.map((materia) => ({
     name: materia.nome,
-    value: materia.importancia || 1,
+    value: materia.relevanciaEspecifica?.[id.toUpperCase()] || materia.importancia || 5,
   }))
 
   //  CALCULA TEMPO TOTAL DE ESTUDO
