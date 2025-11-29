@@ -117,7 +117,7 @@ function Dashboard() {
         {/* Seção de cronogramas */}
         <section className="mb-12">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold">Seus Cronogramas</h2>
+            <h2 className="text-xl font-semibold">Seus cronogramas</h2>
             <Button asChild>
               <Link to="/cronogramas" className="flex items-center gap-2">
                 <Plus className="h-4 w-4" />
