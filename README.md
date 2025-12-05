@@ -359,7 +359,7 @@ Este projeto está sob a licença **MIT**. Veja o arquivo `LICENSE` para mais de
 
 ## 👨‍💻 Autores
 
-- **Equipe Mentor Olímpico** - Estudantes do CEFET-MG
+- **Equipe Mentor Olímpico** - Ana Luisa Diniz, Bento Enrico e Ítalo Gontijo
   - Desenvolvido como Trabalho de Conclusão de Curso (TCC)
 
 ---
@@ -372,13 +372,6 @@ Este projeto está sob a licença **MIT**. Veja o arquivo `LICENSE` para mais de
 
 ---
 
-## 📞 Contato
-
-- **Email**: mentor@olimpico.com
-- **Instagram**: [@mentor.olimpico](https://instagram.com/mentor.olimpico)
-
----
-
 ## 🔗 Links Úteis
 
 - [Documentação Técnica](./DOCUMENTACAO_PROJETO.md) - Documentação detalhada do projeto
@@ -386,6 +379,3 @@ Este projeto está sob a licença **MIT**. Veja o arquivo `LICENSE` para mais de
 - [React Documentation](https://react.dev/)
 - [Vite Documentation](https://vitejs.dev/)
 
----
-
-**Desenvolvido com ❤️ para estudantes que buscam excelência em olimpíadas acadêmicas**
